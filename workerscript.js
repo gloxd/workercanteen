@@ -1,6 +1,5 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzZn5mYK3MO3IuyOy_4Z0sC6sm9ykS9Imu_Oj_WwlIRZJhanCG3gSq7dSTBTEllMoje/exec";
 
-
 let orders = [];
 let currentTab = "active";
 
@@ -9,23 +8,25 @@ const activeCountBadge = document.getElementById('active-count');
 const tabActiveBtn = document.getElementById('tab-active');
 const tabArchiveBtn = document.getElementById('tab-archive');
 const soundEffect = document.getElementById('notification-sound');
+const clearShiftBtn = document.getElementById('clear-shift-btn');
 
 // Часы в шапке
 setInterval(() => {
-    document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+    const clockEl = document.getElementById('clock');
+    if (clockEl) clockEl.textContent = new Date().toLocaleTimeString();
 }, 1000);
 
 // Переключение вкладок «В работе» / «Архив»
-tabActiveBtn.addEventListener('click', () => { currentTab = "active"; toggleTabs(); });
-tabArchiveBtn.addEventListener('click', () => { currentTab = "archive"; toggleTabs(); });
+if (tabActiveBtn) tabActiveBtn.addEventListener('click', () => { currentTab = "active"; toggleTabs(); });
+if (tabArchiveBtn) tabArchiveBtn.addEventListener('click', () => { currentTab = "archive"; toggleTabs(); });
 
 function toggleTabs() {
-    tabActiveBtn.classList.toggle('active', currentTab === "active");
-    tabArchiveBtn.classList.toggle('active', currentTab === "archive");
+    if (tabActiveBtn) tabActiveBtn.classList.toggle('active', currentTab === "active");
+    if (tabArchiveBtn) tabArchiveBtn.classList.toggle('active', currentTab === "archive");
     renderOrders();
 }
 
-// Загрузка заказов из Гугл Таблицы
+// Загрузка заказов из вашей Гугл Таблицы
 async function loadOrdersFromSheet() {
     try {
         const response = await fetch(API_URL);
@@ -37,7 +38,7 @@ async function loadOrdersFromSheet() {
             !orders.some(oldOrd => oldOrd.id === newOrd.id)
         );
 
-        //проверяем, разрешил ли браузер аудио и был ли клик
+        // БЕЗОПАСНЫЙ ЗАПУСК ЗВУКА
         if (hasNewIncoming && orders.length > 0 && soundEffect) {
             try {
                 let playPromise = soundEffect.play();
@@ -55,23 +56,26 @@ async function loadOrdersFromSheet() {
         renderOrders();
     } catch (error) {
         console.error("Ошибка синхронизации с Таблицей:", error);
-        // Если таблица вернула ошибку, выведем её на экран для отладки
-        ordersListContainer.innerHTML = `<p style="text-align:center; color:#f75a68; margin-top:40px;">Ошибка связи: ${error.message}</p>`;
+        if (ordersListContainer) {
+            ordersListContainer.innerHTML = `<p style="text-align:center; color:#f75a68; margin-top:40px;">Ошибка связи: ${error.message}</p>`;
+        }
     }
 }
 
 // Генерация карточек заказов на экране смартфона
 function renderOrders() {
+    if (!ordersListContainer) return;
     ordersListContainer.innerHTML = '';
     
-    // Фильтруем: во вкладке активных показываем всё, кроме статуса 'Выдан'
+    // Фильтруем: во вкладке активных скрываем статусы 'Выдан' и 'В архиве'
     const filteredOrders = orders.filter(order => {
-        return currentTab === "active" ? order.status !== "Выдан" : order.status === "Выдан";
+        const isActiveStatus = order.status !== "Выдан" && order.status !== "В архиве";
+        return currentTab === "active" ? isActiveStatus : order.status === "Выдан";
     });
 
-    // Бейдж с количеством активных заказов на кнопке
-    const activeCount = orders.filter(o => o.status !== "Выдан").length;
-    activeCountBadge.textContent = activeCount;
+    // Счетчик активных заказов для вкладки
+    const activeCount = orders.filter(o => o.status !== "Выдан" && o.status !== "В архиве").length;
+    if (activeCountBadge) activeCountBadge.textContent = activeCount;
 
     if (filteredOrders.length === 0) {
         ordersListContainer.innerHTML = `<p style="text-align:center; color:#7c7c8a; margin-top:40px;">Заказов нет</p>`;
@@ -81,7 +85,6 @@ function renderOrders() {
     filteredOrders.forEach(order => {
         const card = document.createElement('div');
         
-        // Связываем русские статусы таблицы с классами CSS стилей оформления
         let cssStatus = 'status-new';
         let buttonHTML = '';
         
@@ -101,18 +104,17 @@ function renderOrders() {
 
         card.className = `order-card ${cssStatus}`;
 
-        // Форматируем состав заказа (разбиваем сохраненный текст по строкам)
-        const itemsHTML = order.composition.toString().split('\n')
+        const itemsHTML = order.composition ? order.composition.toString().split('\n')
             .filter(item => item.trim() !== '')
-            .map(item => `<li>${item}</li>`).join('');
+            .map(item => `<li>${item}</li>`).join('') : '';
 
         card.innerHTML = `
             <div class="card-header">
                 <span class="order-number">Строка №${order.id}</span>
-                <span class="order-time">${order.time}</span>
+                <span class="order-time">${order.time || ''}</span>
             </div>
             <div class="customer-info">
-                <p>👤 ${order.name}</p>
+                <p>👤 ${order.name || 'Неизвестно'}</p>
                 ${order.phone ? `<p>📞 ${order.phone}</p>` : ''}
             </div>
             <div class="order-composition">
@@ -120,7 +122,7 @@ function renderOrders() {
                 <ul>${itemsHTML}</ul>
             </div>
             <div class="card-footer">
-                <div class="order-total">Итого: <strong>${order.total}</strong></div>
+                <div class="order-total">Итого: <strong>${order.total || 0}</strong></div>
                 ${buttonHTML}
             </div>
         `;
@@ -130,46 +132,49 @@ function renderOrders() {
 
 // Отправка нового статуса обратно в Гугл Таблицу
 async function changeStatus(rowId, newStatus) {
-    // Сначала мгновенно меняем статус на экране, чтобы повар видел реакцию на нажатие
     const order = orders.find(o => o.id.toString() === rowId.toString());
     if (order) {
         order.status = newStatus;
         renderOrders();
     }
     
-    // Передаем параметры строки и статуса в doGet веб-приложения
     try {
         await fetch(`${API_URL}?row=${rowId}&status=${encodeURIComponent(newStatus)}`);
     } catch (e) {
         console.error("Не удалось обновить ячейку в таблице:", e);
     }
 }
+
 // Функция для закрытия смены и очистки экрана
 async function clearShift() {
     const confirmClear = confirm("Вы уверены, что хотите закрыть смену? Все текущие заказы уйдут в архив и пропадут с экрана.");
     if (!confirmClear) return;
 
-    // Временно пишем на экране, что идет очистка
-    ordersListContainer.innerHTML = `<p style="text-align:center; color:#ff9000; margin-top:40px;">Архивация заказов... Пожалуйста, подождите.</p>`;
+    if (ordersListContainer) {
+        ordersListContainer.innerHTML = `<p style="text-align:center; color:#ff9000; margin-top:40px;">Архивация заказов... Пожалуйста, подождите.</p>`;
+    }
 
     try {
-        // Отправляем специальный параметр action=clearShift в наш doGet скрипта
         const response = await fetch(`${API_URL}?action=clearShift`);
         const result = await response.json();
         
         if (result.result === 'success') {
             alert("Смена успешно закрыта! Экран очищен.");
-            // Сразу же обновляем данные с сервера
             await loadOrdersFromSheet();
         } else {
             alert("Ошибка при закрытии смены: " + result.message);
-            renderOrders();
+            await loadOrdersFromSheet();
         }
     } catch (error) {
         console.error("Ошибка запроса очистки смены:", error);
         alert("Не удалось связаться с таблицей для очистки смены.");
-        renderOrders();
+        await loadOrdersFromSheet();
     }
+}
+
+// ЖЕСТКАЯ ПРИВЯЗКА КЛИКА К КНОПКЕ ЗАКРЫТИЯ СМЕНЫ
+if (clearShiftBtn) {
+    clearShiftBtn.addEventListener('click', clearShift);
 }
 
 // Автообновление каждые 10 секунд
