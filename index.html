@@ -12,12 +12,12 @@
 
     <div class="worker-app">
         
-       <header class="worker-header">
+        <header class="worker-header">
             <div class="header-info">
                 <h2>👨‍🍳 Панель Кухни</h2>
                 <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
                     <p id="clock" style="margin: 0;">00:00:00</p>
-                    <button id="clear-shift-btn" onclick="clearShift()" style="background: #323238; color: #f75a68; border: 1px solid #f75a68; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">Закрыть смену</button>
+                    <button id="clear-shift-btn" style="background: #323238; color: #f75a68; border: 1px solid #f75a68; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; position: relative; z-index: 999;">Закрыть смену</button>
                 </div>
             </div>
             <span class="status-indicator online">В сети</span>
@@ -29,56 +29,8 @@
         </nav>
 
         <main class="orders-container" id="orders-list">
-            
-            <div class="order-card status-new">
-                <div class="card-header">
-                    <span class="order-number">Заказ №142</span>
-                    <span class="order-time">12:30 (5 мин назад)</span>
-                </div>
-                
-                <div class="customer-info">
-                    <p class="client-name">👤 Иван Иванов (Студент)</p>
-                    <p class="client-phone">📞 +7 (999) 123-45-67</p>
-                </div>
+            </main>
 
-                <div class="order-composition">
-                    <h4>Состав заказа:</h4>
-                    <ul>
-                        <li><span class="item-count">2 x</span> Блины домашние</li>
-                        <li><span class="item-count">1 x</span> Суп-пюре сырный с гренками</li>
-                        <li><span class="item-count">1 x</span> Пюре картофельное</li>
-                    </ul>
-                </div>
-
-                <div class="card-footer">
-                    <div class="order-total">Итого: <strong>214 ₽</strong></div>
-                    <button class="action-btn start-btn">Начать готовить</button>
-                </div>
-            </div>
-
-            <div class="order-card status-ready">
-                <div class="card-header">
-                    <span class="order-number">Заказ №141</span>
-                    <span class="order-time">12:15 (Готов к выдаче)</span>
-                </div>
-                <div class="customer-info">
-                    <p class="client-name">👤 Смирнова О.Н. (Преподаватель)</p>
-                </div>
-                <div class="order-composition">
-                    <ul>
-                        <li><span class="item-count">1 x</span> Салат «Фреш» с бужениной</li>
-                        <li><span class="item-count">1 x</span> Рис отварной</li>
-                    </ul>
-                </div>
-                <div class="card-footer">
-                    <div class="order-total">Итого: <strong>137 ₽</strong></div>
-                    <button class="action-btn complete-btn">Выдать поднос</button>
-                </div>
-            </div>
-
-        </main>
-
-        <button id="mock-new-order-btn" style="position:fixed; bottom:10px; right:10px; opacity:0.3; font-size:10px; padding:5px;">Тест Нового Заказа</button>
     </div>
 
     <script src="workerscript.js"></script>
