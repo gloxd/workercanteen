@@ -12,10 +12,13 @@
 
     <div class="worker-app">
         
-        <header class="worker-header">
+       <header class="worker-header">
             <div class="header-info">
                 <h2>👨‍🍳 Панель Кухни</h2>
-                <p id="clock">00:00:00</p>
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+                    <p id="clock" style="margin: 0;">00:00:00</p>
+                    <button id="clear-shift-btn" onclick="clearShift()" style="background: #323238; color: #f75a68; border: 1px solid #f75a68; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">Закрыть смену</button>
+                </div>
             </div>
             <span class="status-indicator online">В сети</span>
         </header>
