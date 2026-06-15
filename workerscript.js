@@ -144,6 +144,33 @@ async function changeStatus(rowId, newStatus) {
         console.error("Не удалось обновить ячейку в таблице:", e);
     }
 }
+// Функция для закрытия смены и очистки экрана
+async function clearShift() {
+    const confirmClear = confirm("Вы уверены, что хотите закрыть смену? Все текущие заказы уйдут в архив и пропадут с экрана.");
+    if (!confirmClear) return;
+
+    // Временно пишем на экране, что идет очистка
+    ordersListContainer.innerHTML = `<p style="text-align:center; color:#ff9000; margin-top:40px;">Архивация заказов... Пожалуйста, подождите.</p>`;
+
+    try {
+        // Отправляем специальный параметр action=clearShift в наш doGet скрипта
+        const response = await fetch(`${API_URL}?action=clearShift`);
+        const result = await response.json();
+        
+        if (result.result === 'success') {
+            alert("Смена успешно закрыта! Экран очищен.");
+            // Сразу же обновляем данные с сервера
+            await loadOrdersFromSheet();
+        } else {
+            alert("Ошибка при закрытии смены: " + result.message);
+            renderOrders();
+        }
+    } catch (error) {
+        console.error("Ошибка запроса очистки смены:", error);
+        alert("Не удалось связаться с таблицей для очистки смены.");
+        renderOrders();
+    }
+}
 
 // Автообновление каждые 10 секунд
 setInterval(loadOrdersFromSheet, 10000);
