@@ -25,7 +25,7 @@ function toggleTabs() {
     renderOrders();
 }
 
-// Загрузка заказов из вашей Гугл Таблицы
+// Загрузка заказов из Гугл Таблицы
 async function loadOrdersFromSheet() {
     try {
         const response = await fetch(API_URL);
@@ -37,15 +37,26 @@ async function loadOrdersFromSheet() {
             !orders.some(oldOrd => oldOrd.id === newOrd.id)
         );
 
-        // Если прилетел новый заказ — включаем звук уведомления на кухне
-        if (hasNewIncoming && orders.length > 0) {
-            soundEffect.play().catch(e => console.log("Звук заблокирован до клика"));
+        //проверяем, разрешил ли браузер аудио и был ли клик
+        if (hasNewIncoming && orders.length > 0 && soundEffect) {
+            try {
+                let playPromise = soundEffect.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Воспроизведение звука ожидает взаимодействия пользователя с экраном.");
+                    });
+                }
+            } catch (soundError) {
+                console.log("Звук временно недоступен:", soundError);
+            }
         }
 
         orders = fetchedOrders;
         renderOrders();
     } catch (error) {
         console.error("Ошибка синхронизации с Таблицей:", error);
+        // Если таблица вернула ошибку, выведем её на экран для отладки
+        ordersListContainer.innerHTML = `<p style="text-align:center; color:#f75a68; margin-top:40px;">Ошибка связи: ${error.message}</p>`;
     }
 }
 
