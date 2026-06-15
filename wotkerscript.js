@@ -1,5 +1,5 @@
-// ВСТАВЬТЕ СЮДА ВАШУ ССЫЛКУ НА ВЕБ-ПРИЛОЖЕНИЕ GOOGLE APPS SCRIPT
 const API_URL = "https://script.google.com/macros/s/AKfycbyqN9h84xK-PtWILRicM8p4bgkTL_jkVozTSHVyGFOKZOwSxAePT1miRZVBSZJek5RX/exec";
+//https://script.google.com/macros/s/AKfycbyqN9h84xK-PtWILRicM8p4bgkTL_jkVozTSHVyGFOKZOwSxAePT1miRZVBSZJek5RX/exec
 
 let orders = [];
 let currentTab = "active";
