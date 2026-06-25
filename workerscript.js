@@ -21,10 +21,15 @@ if (typeof firebase !== 'undefined') {
             if (permission === 'granted') {
                 console.log('Разрешение на push-уведомления получено.');
                 
-                // Получаем уникальный токен телефона повара, используя ваш VAPID-ключ
-                const token = await messaging.getToken({ 
-                    vapidKey: 'BK0FHGQnbGWsAwIDpLbKEv31XF414gXIi6L2wgZhVfvwQe3MTRj4MEiqHObPgXdvG0E2LfHCUQIz3Fwbyzlx8o8' 
-                });
+                
+// 1. Сначала регистрируем сервис-воркер вручную по относительному пути вашего репозитория
+    const serviceWorkerRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+
+// 2. Передаем эту регистрацию внутрь настроек Firebase
+    const token = await messaging.getToken({ 
+    serviceWorkerRegistration: serviceWorkerRegistration,
+    vapidKey: 'BK0FHGQnbGWsAwIDpLbKEv31XF414gXIi6L2wgZhVfvwQe3MTRj4MEiqHObPgXdvG0E2LfHCUQIz3Fwbyzlx8o8' 
+});
                 
                 if (token) {
                     console.log('--- ТОКЕН ТЕЛЕФОНА ПОВАРА ДЛЯ GOOGLE SCRIPTS ---');
