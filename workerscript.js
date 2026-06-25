@@ -17,14 +17,9 @@ if (typeof firebase !== 'undefined') {
         try {
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
-                console.log('Разрешение на push-уведомления получено.');
-                
-                // 1. Регистрируем сервис-воркер
                 const serviceWorkerRegistration = await navigator.serviceWorker.register('/workercanteen/firebase-messaging-sw.js');
                 
-                // 2. УМНОЕ ОЖИДАНИЕ: Ждем, пока сервис-воркер станет активным
                 if (!serviceWorkerRegistration.active) {
-                    console.log('Сервис-воркер активируется, ожидаем завершения...');
                     await new Promise((resolve) => {
                         const interval = setInterval(() => {
                             if (serviceWorkerRegistration.active) {
@@ -33,31 +28,23 @@ if (typeof firebase !== 'undefined') {
                             }
                         }, 100);
                     });
-                    console.log('Сервис-воркер успешно активирован!');
                 }
                 
-                // 3. Запрашиваем токен, когда воркер гарантированно готов
-                const token = await messaging.getToken({ 
+                // Просто регистрируем токен в системе Firebase без вывода окон
+                await messaging.getToken({ 
                     serviceWorkerRegistration: serviceWorkerRegistration,
                     vapidKey: 'BK0FHGQnbGWsAwIDpLbKEv31XF414gXIi6L2wgZhVfvwQe3MTRj4MEiqHObPgXdvG0E2LfHCUQIz3Fwbyzlx8o8' 
                 });
-                
-                if (token) {
-                    console.log('--- ТОКЕН ТЕЛЕФОНА ПОВАРА ДЛЯ GOOGLE SCRIPTS ---');
-                    console.log(token);
-                    console.log('------------------------------------------------');
-                    alert("Токен получен! Скопируйте его:\n\n" + token);
-                } else {
-                    console.warn('Не удалось сгенерировать токен.');
-                }
-            } else {
-                console.warn('Запрос уведомлений отклонен.');
             }
         } catch (error) {
             console.error('Ошибка настройки Push-уведомлений:', error);
         }
     }
 
+    document.addEventListener('click', () => {
+        initPushNotifications();
+    }, { once: true });
+}
     document.addEventListener('click', () => {
         initPushNotifications();
     }, { once: true });
