@@ -30,11 +30,14 @@ if (typeof firebase !== 'undefined') {
                     });
                 }
                 
-                // Просто регистрируем токен в системе Firebase без вывода окон
-                await messaging.getToken({ 
+                // Генерируем токен в системе Firebase
+                const token = await messaging.getToken({ 
                     serviceWorkerRegistration: serviceWorkerRegistration,
                     vapidKey: 'BK0FHGQnbGWsAwIDpLbKEv31XF414gXIi6L2wgZhVfvwQe3MTRj4MEiqHObPgXdvG0E2LfHCUQIz3Fwbyzlx8o8' 
                 });
+
+                // 🔥 ВРЕМЕННО выводим токен на экран для копирования в Apps Script
+                alert("Скопируйте этот токен целиком:\n\n" + token);
             }
         } catch (error) {
             console.error('Ошибка настройки Push-уведомлений:', error);
@@ -47,7 +50,7 @@ if (typeof firebase !== 'undefined') {
 }
 
 // --- ОСНОВНАЯ ЛОГИКА ВАШЕЙ КУХНИ ---
-const API_URL = "https://script.google.com/macros/s/AKfycby8PTpDL9dMJdC9N0zqVTUSM3N8ZjGq43fiTkzac0TLRPKluqdRAZ8SmcMeoDhMSYY/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbziVke5lF-FgR9u-W5HhbpcZr3Mpa7UB8I9dS2F6H9P4U_bLR_5mTGgdV9vyy48Fc-n/exec";
 
 let orders = [];
 let currentTab = "active";
