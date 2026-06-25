@@ -1,0 +1,9 @@
+{
+  "name": "Панель кухни Столовая",
+  "short_name": "Кухня",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121214",
+  "theme_color": "#202024",
+  "gcm_sender_id": "418203930365"
+}
