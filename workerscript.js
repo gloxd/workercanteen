@@ -45,10 +45,6 @@ if (typeof firebase !== 'undefined') {
         initPushNotifications();
     }, { once: true });
 }
-    document.addEventListener('click', () => {
-        initPushNotifications();
-    }, { once: true });
-}
 
 // --- ОСНОВНАЯ ЛОГИКА ВАШЕЙ КУХНИ ---
 const API_URL = "https://script.google.com/macros/s/AKfycbziVke5lF-FgR9u-W5HhbpcZr3Mpa7UB8I9dS2F6H9P4U_bLR_5mTGgdV9vyy48Fc-n/exec";
