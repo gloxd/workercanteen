@@ -47,7 +47,7 @@ if (typeof firebase !== 'undefined') {
 }
 
 // --- ОСНОВНАЯ ЛОГИКА ВАШЕЙ КУХНИ ---
-const API_URL = "https://script.google.com/macros/s/AKfycbziVke5lF-FgR9u-W5HhbpcZr3Mpa7UB8I9dS2F6H9P4U_bLR_5mTGgdV9vyy48Fc-n/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycby8PTpDL9dMJdC9N0zqVTUSM3N8ZjGq43fiTkzac0TLRPKluqdRAZ8SmcMeoDhMSYY/exec";
 
 let orders = [];
 let currentTab = "active";
