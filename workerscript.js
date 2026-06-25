@@ -1,3 +1,54 @@
+// --- БЛОК FIREBASE PUSH-УВЕДОМЛЕНИЙ ---
+const firebaseConfig = {
+  apiKey: "AIzaSyC_TrbQ8QBkosbQk6-MFcNhonON8_rD1jg",
+  authDomain: "psunotification-b8b39.firebaseapp.com",
+  projectId: "psunotification-b8b39",
+  storageBucket: "psunotification-b8b39.firebasestorage.app",
+  messagingSenderId: "418203930365",
+  appId: "1:418203930365:web:4a7d49a6f675bdc28c7894",
+  measurementId: "G-BNM08047HR"
+};
+
+// Инициализируем только если библиотеки Firebase успешно загружены в index.html
+if (typeof firebase !== 'undefined') {
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+
+    // Автоматический запрос прав при первом клике/взаимодействии с приложением
+    async function initPushNotifications() {
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                console.log('Разрешение на push-уведомления получено.');
+                
+                // Получаем уникальный токен телефона повара, используя ваш VAPID-ключ
+                const token = await messaging.getToken({ 
+                    vapidKey: 'BK0FHGQnbGWsAwIDpLbKEv31XF414gXIi6L2wgZhVfvwQe3MTRj4MEiqHObPgXdvG0E2LfHCUQIz3Fwbyzlx8o8' 
+                });
+                
+                if (token) {
+                    console.log('--- ТОКЕН ТЕЛЕФОНА ПОВАРА ДЛЯ GOOGLE SCRIPTS ---');
+                    console.log(token);
+                    console.log('------------------------------------------------');
+                    // Выведет токен в консоль браузера (F12 на ПК или через удаленную отладку)
+                } else {
+                    console.warn('Не удалось сгенерировать токен устройства.');
+                }
+            } else {
+                console.warn('Повар отклонил запрос на уведомления.');
+            }
+        } catch (error) {
+            console.error('Ошибка настройки Push-уведомлений:', error);
+        }
+    }
+
+    // Запускаем процесс при любом первом клике поваром по экрану (чтобы браузер разрешил)
+    document.addEventListener('click', () => {
+        initPushNotifications();
+    }, { once: true }); // Сработает ровно один раз
+}
+
+// --- ОСНОВНАЯ ЛОГИКА ВАШЕЙ КУХНИ ---
 const API_URL = "https://script.google.com/macros/s/AKfycbzZn5mYK3MO3IuyOy_4Z0sC6sm9ykS9Imu_Oj_WwlIRZJhanCG3gSq7dSTBTEllMoje/exec";
 
 let orders = [];
