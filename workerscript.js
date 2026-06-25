@@ -9,49 +9,43 @@ const firebaseConfig = {
   measurementId: "G-BNM08047HR"
 };
 
-// Инициализируем только если библиотеки Firebase успешно загружены в index.html
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    // Автоматический запрос прав при первом клике/взаимодействии с приложением
     async function initPushNotifications() {
         try {
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
                 console.log('Разрешение на push-уведомления получено.');
                 
+                // Исправляем 404: жестко указываем путь к сервис-воркеру в вашем репозитории
+                const serviceWorkerRegistration = await navigator.serviceWorker.register('/workercanteen/firebase-messaging-sw.js');
                 
-// 1. Сначала регистрируем сервис-воркер вручную по относительному пути вашего репозитория
-    const serviceWorkerRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
-
-// 2. Передаем эту регистрацию внутрь настроек Firebase
-    const token = await messaging.getToken({ 
-    serviceWorkerRegistration: serviceWorkerRegistration,
-    vapidKey: 'BK0FHGQnbGWsAwIDpLbKEv31XF414gXIi6L2wgZhVfvwQe3MTRj4MEiqHObPgXdvG0E2LfHCUQIz3Fwbyzlx8o8' 
-});
+                const token = await messaging.getToken({ 
+                    serviceWorkerRegistration: serviceWorkerRegistration,
+                    vapidKey: 'BK0FHGQnbGWsAwIDpLbKEv31XF414gXIi6L2wgZhVfvwQe3MTRj4MEiqHObPgXdvG0E2LfHCUQIz3Fwbyzlx8o8' 
+                });
                 
                 if (token) {
                     console.log('--- ТОКЕН ТЕЛЕФОНА ПОВАРА ДЛЯ GOOGLE SCRIPTS ---');
                     console.log(token);
                     console.log('------------------------------------------------');
-                    alert("Скопируйте этот токен:\n\n" + token);
-                    // Выведет токен в консоль браузера (F12 на ПК или через удаленную отладку)
+                    alert("Токен получен! Скопируйте его:\n\n" + token);
                 } else {
-                    console.warn('Не удалось сгенерировать токен устройства.');
+                    console.warn('Не удалось сгенерировать токен.');
                 }
             } else {
-                console.warn('Повар отклонил запрос на уведомления.');
+                console.warn('Запрос уведомлений отклонен.');
             }
         } catch (error) {
             console.error('Ошибка настройки Push-уведомлений:', error);
         }
     }
 
-    // Запускаем процесс при любом первом клике поваром по экрану (чтобы браузер разрешил)
     document.addEventListener('click', () => {
         initPushNotifications();
-    }, { once: true }); // Сработает ровно один раз
+    }, { once: true });
 }
 
 // --- ОСНОВНАЯ ЛОГИКА ВАШЕЙ КУХНИ ---
@@ -67,13 +61,11 @@ const tabArchiveBtn = document.getElementById('tab-archive');
 const soundEffect = document.getElementById('notification-sound');
 const clearShiftBtn = document.getElementById('clear-shift-btn');
 
-// Часы в шапке
 setInterval(() => {
     const clockEl = document.getElementById('clock');
     if (clockEl) clockEl.textContent = new Date().toLocaleTimeString();
 }, 1000);
 
-// Переключение вкладок «В работе» / «Архив»
 if (tabActiveBtn) tabActiveBtn.addEventListener('click', () => { currentTab = "active"; toggleTabs(); });
 if (tabArchiveBtn) tabArchiveBtn.addEventListener('click', () => { currentTab = "archive"; toggleTabs(); });
 
@@ -83,54 +75,45 @@ function toggleTabs() {
     renderOrders();
 }
 
-// Загрузка заказов из вашей Гугл Таблицы
 async function loadOrdersFromSheet() {
     try {
         const response = await fetch(API_URL);
         const fetchedOrders = await response.json();
         
-        // Проверяем, появились ли новые заказы со статусом 'Новый'
         const hasNewIncoming = fetchedOrders.some(newOrd => 
             newOrd.status === 'Новый' && 
             !orders.some(oldOrd => oldOrd.id === newOrd.id)
         );
 
-        // БЕЗОПАСНЫЙ ЗАПУСК ЗВУКА
         if (hasNewIncoming && orders.length > 0 && soundEffect) {
             try {
                 let playPromise = soundEffect.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(error => {
-                        console.log("Воспроизведение звука ожидает взаимодействия пользователя с экраном.");
+                        console.log("Ожидание взаимодействия со звуком.");
                     });
                 }
             } catch (soundError) {
-                console.log("Звук временно недоступен:", soundError);
+                console.log("Звук недоступен:", soundError);
             }
         }
 
         orders = fetchedOrders;
         renderOrders();
     } catch (error) {
-        console.error("Ошибка синхронизации с Таблицей:", error);
-        if (ordersListContainer) {
-            ordersListContainer.innerHTML = `<p style="text-align:center; color:#f75a68; margin-top:40px;">Ошибка связи: ${error.message}</p>`;
-        }
+        console.error("Ошибка синхронизации:", error);
     }
 }
 
-// Генерация карточек заказов на экране смартфона
 function renderOrders() {
     if (!ordersListContainer) return;
     ordersListContainer.innerHTML = '';
     
-    // Фильтруем: во вкладке активных скрываем статусы 'Выдан' и 'В архиве'
     const filteredOrders = orders.filter(order => {
         const isActiveStatus = order.status !== "Выдан" && order.status !== "В архиве";
         return currentTab === "active" ? isActiveStatus : order.status === "Выдан";
     });
 
-    // Счетчик активных заказов для вкладки
     const activeCount = orders.filter(o => o.status !== "Выдан" && o.status !== "В архиве").length;
     if (activeCountBadge) activeCountBadge.textContent = activeCount;
 
@@ -141,7 +124,6 @@ function renderOrders() {
 
     filteredOrders.forEach(order => {
         const card = document.createElement('div');
-        
         let cssStatus = 'status-new';
         let buttonHTML = '';
         
@@ -187,55 +169,35 @@ function renderOrders() {
     });
 }
 
-// Отправка нового статуса обратно в Гугл Таблицу
 async function changeStatus(rowId, newStatus) {
     const order = orders.find(o => o.id.toString() === rowId.toString());
     if (order) {
         order.status = newStatus;
         renderOrders();
     }
-    
     try {
         await fetch(`${API_URL}?row=${rowId}&status=${encodeURIComponent(newStatus)}`);
     } catch (e) {
-        console.error("Не удалось обновить ячейку в таблице:", e);
+        console.error("Ошибка обновления статуса:", e);
     }
 }
 
-// Функция для закрытия смены и очистки экрана
 async function clearShift() {
-    const confirmClear = confirm("Вы уверены, что хотите закрыть смену? Все текущие заказы уйдут в архив и пропадут с экрана.");
+    const confirmClear = confirm("Вы уверены, что хотите закрыть смену?");
     if (!confirmClear) return;
-
-    if (ordersListContainer) {
-        ordersListContainer.innerHTML = `<p style="text-align:center; color:#ff9000; margin-top:40px;">Архивация заказов... Пожалуйста, подождите.</p>`;
-    }
 
     try {
         const response = await fetch(`${API_URL}?action=clearShift`);
         const result = await response.json();
-        
         if (result.result === 'success') {
-            alert("Смена успешно закрыта! Экран очищен.");
-            await loadOrdersFromSheet();
-        } else {
-            alert("Ошибка при закрытии смены: " + result.message);
+            alert("Смена закрыта!");
             await loadOrdersFromSheet();
         }
     } catch (error) {
-        console.error("Ошибка запроса очистки смены:", error);
-        alert("Не удалось связаться с таблицей для очистки смены.");
-        await loadOrdersFromSheet();
+        console.error("Ошибка:", error);
     }
 }
 
-// ЖЕСТКАЯ ПРИВЯЗКА КЛИКА К КНОПКЕ ЗАКРЫТИЯ СМЕНЫ
-if (clearShiftBtn) {
-    clearShiftBtn.addEventListener('click', clearShift);
-}
-
-// Автообновление каждые 10 секунд
+if (clearShiftBtn) clearShiftBtn.addEventListener('click', clearShift);
 setInterval(loadOrdersFromSheet, 10000);
-
-// Стартовый запуск при открытии приложения
 loadOrdersFromSheet();
