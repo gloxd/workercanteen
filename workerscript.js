@@ -19,9 +19,24 @@ if (typeof firebase !== 'undefined') {
             if (permission === 'granted') {
                 console.log('Разрешение на push-уведомления получено.');
                 
-                // Исправляем 404: жестко указываем путь к сервис-воркеру в вашем репозитории
+                // 1. Регистрируем сервис-воркер
                 const serviceWorkerRegistration = await navigator.serviceWorker.register('/workercanteen/firebase-messaging-sw.js');
                 
+                // 2. УМНОЕ ОЖИДАНИЕ: Ждем, пока сервис-воркер станет активным
+                if (!serviceWorkerRegistration.active) {
+                    console.log('Сервис-воркер активируется, ожидаем завершения...');
+                    await new Promise((resolve) => {
+                        const interval = setInterval(() => {
+                            if (serviceWorkerRegistration.active) {
+                                clearInterval(interval);
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                    console.log('Сервис-воркер успешно активирован!');
+                }
+                
+                // 3. Запрашиваем токен, когда воркер гарантированно готов
                 const token = await messaging.getToken({ 
                     serviceWorkerRegistration: serviceWorkerRegistration,
                     vapidKey: 'BK0FHGQnbGWsAwIDpLbKEv31XF414gXIi6L2wgZhVfvwQe3MTRj4MEiqHObPgXdvG0E2LfHCUQIz3Fwbyzlx8o8' 
