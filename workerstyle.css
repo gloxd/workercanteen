@@ -6,7 +6,7 @@
 }
 
 body {
-    background-color: #121214; /* Темный фон меньше утомляет глаза при работе в помещении */
+    background-color: #121214; 
     color: #e1e1e6;
     overflow: hidden;
 }
